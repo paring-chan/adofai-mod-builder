@@ -33,7 +33,7 @@ function build(mod, dev, extra = []) {
         fs.mkdirSync(devPath)
     }
 
-    cp.execSync('"C:\\Program Files\\JetBrains\\JetBrains Rider 2021.1.3\\tools\\MSBuild\\Current\\Bin\\MSBuild.exe" /p:Configuration=Release', {
+    cp.execSync(JSON.stringify(builderConfig.msbuild) + ' /p:Configuration=Release', {
         cwd: proj
     })
 
