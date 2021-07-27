@@ -46,7 +46,7 @@ function build(mod, dev, extra = []) {
     if (!dev) {
         if (!fs.existsSync(release)) fs.mkdirSync(release)
         const zip = archiver('zip', {})
-        const stream = fs.createWriteStream(path.join(release, `${info.Id}-${info.Version}.zip`))
+        const stream = fs.createWriteStream(path.join(release, `${info.Id}.zip`))
         zip.pipe(stream)
         zip.directory(outPath, info.Id)
         zip.finalize()
@@ -60,6 +60,15 @@ const dev = !args.release
 for (const i of builderConfig.outputs) {
     console.log('Building: ' + i.mod)
     build(i.mod, dev, i.extraFiles)
+}
+
+if (!dev && builderConfig.releaseName) {
+    console.log('Creating zip file with all mods...')
+    const zip = archiver('zip', {})
+    const stream = fs.createWriteStream(path.join(release, `${builderConfig.releaseName}.zip`))
+    zip.pipe(stream)
+    zip.directory(out, '.')
+    zip.finalize()
 }
 
 if (builderConfig.launchAdofai && dev) {
