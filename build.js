@@ -14,42 +14,46 @@ const release = path.join(__dirname, '../Release')
 if (!fs.existsSync(out)) fs.mkdirSync(out)
 
 function build(mod, dev, extra = []) {
-    const outPath = path.join(out, mod)
-    const proj = path.join(__dirname, '..', mod)
-    const devPath = path.join(builderConfig.modsPath, mod)
+    try {
+        const outPath = path.join(out, mod)
+        const proj = path.join(__dirname, '..', mod)
+        const devPath = path.join(builderConfig.modsPath, mod)
 
-    const copyDist = (filename, root) => fs.copyFileSync(path.join(...root ? [proj] : [proj, 'bin/Release'], filename), path.join(devPath, filename.split('/').pop()))
-    const copy = (filename, root) => {
-        fs.copyFileSync(path.join(...root ? [proj] : [proj, 'bin/Release'], filename), path.join(outPath, filename.split('/').pop()))
-        if (dev) copyDist(filename, root)
-    }
+        const copyDist = (filename, root) => fs.copyFileSync(path.join(...root ? [proj] : [proj, 'bin/Release'], filename), path.join(devPath, filename.split('/').pop()))
+        const copy = (filename, root) => {
+            fs.copyFileSync(path.join(...root ? [proj] : [proj, 'bin/Release'], filename), path.join(outPath, filename.split('/').pop()))
+            if (dev) copyDist(filename, root)
+        }
 
-    const info = require(path.join(proj, 'Info.json'))
-    rimraf.sync(outPath)
-    fs.mkdirSync(outPath)
+        const info = require(path.join(proj, 'Info.json'))
+        rimraf.sync(outPath)
+        fs.mkdirSync(outPath)
 
-    if (dev) {
-        rimraf.sync(devPath)
-        fs.mkdirSync(devPath)
-    }
+        if (dev) {
+            rimraf.sync(devPath)
+            fs.mkdirSync(devPath)
+        }
 
-    cp.execSync(JSON.stringify(builderConfig.msbuild) + ' /p:Configuration=Release', {
-        cwd: proj
-    })
+        cp.execSync(JSON.stringify(builderConfig.msbuild) + ' /p:Configuration=Release', {
+            cwd: proj
+        })
 
-    copy(mod + '.dll')
-    copy('Info.json', true)
-    for (const ex of extra) {
-        copy(ex.file, ex.root || false)
-    }
+        copy(mod + '.dll')
+        copy('Info.json', true)
+        for (const ex of extra) {
+            copy(ex.file, ex.root || false)
+        }
 
-    if (!dev) {
-        if (!fs.existsSync(release)) fs.mkdirSync(release)
-        const zip = archiver('zip', {})
-        const stream = fs.createWriteStream(path.join(release, `${info.Id}.zip`))
-        zip.pipe(stream)
-        zip.directory(outPath, info.Id)
-        zip.finalize()
+        if (!dev) {
+            if (!fs.existsSync(release)) fs.mkdirSync(release)
+            const zip = archiver('zip', {})
+            const stream = fs.createWriteStream(path.join(release, `${info.Id}.zip`))
+            zip.pipe(stream)
+            zip.directory(outPath, info.Id)
+            zip.finalize()
+        }
+    } catch (e) {
+        console.log(e)
     }
 }
 
