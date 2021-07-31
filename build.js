@@ -19,9 +19,9 @@ function build(mod, dev, extra = []) {
         const proj = path.join(__dirname, '..', mod)
         const devPath = path.join(builderConfig.modsPath, mod)
 
-        const copyDist = (filename, root) => fs.copyFileSync(path.join(...root ? [proj] : [proj, 'bin/Release'], filename), path.join(devPath, filename.split('/').pop()))
+        const copyDist = (filename, root) => fs.copyFileSync(path.join(...root ? [proj] : [proj, `bin/${dev ? 'Debug' : 'Release'}`], filename), path.join(devPath, filename.split('/').pop()))
         const copy = (filename, root) => {
-            fs.copyFileSync(path.join(...root ? [proj] : [proj, 'bin/Release'], filename), path.join(outPath, filename.split('/').pop()))
+            fs.copyFileSync(path.join(...root ? [proj] : [proj, `bin/${dev ? 'Debug' : 'Release'}`], filename), path.join(outPath, filename.split('/').pop()))
             if (dev) copyDist(filename, root)
         }
 
@@ -29,12 +29,11 @@ function build(mod, dev, extra = []) {
         rimraf.sync(outPath)
         fs.mkdirSync(outPath)
 
-        if (dev) {
-            rimraf.sync(devPath)
+        if (dev && !fs.existsSync(devPath)) {
             fs.mkdirSync(devPath)
         }
 
-        cp.execSync(JSON.stringify(builderConfig.msbuild) + ' /p:Configuration=Release', {
+        cp.execSync(JSON.stringify(builderConfig.msbuild) + ` /p:Configuration=${dev ? 'Debug' : 'Release'}`, {
             cwd: proj
         })
 
